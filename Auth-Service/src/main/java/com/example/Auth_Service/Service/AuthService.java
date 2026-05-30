@@ -45,7 +45,10 @@ public class AuthService {
     public AuthResponse login(loginRequest request){
         User user = userRepo.findByEmail(request.getEmail());
         if (!passwordEncoder.matches(request.getPassword(),user.getPassword())){
-            throw new RuntimeException("invalid password");
+           logProducer.sendlog(new LogMessage(  "AUTH-SERVICE",
+                   "WARN",
+                   "Invalid user ",
+                   LocalDateTime.now()));
         }
         String token = jwtUtil.genrateToken(user.getEmail());
         logProducer.sendlog(
