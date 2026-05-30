@@ -267,7 +267,7 @@ Auth-Service/
 └── HELP.md
 ```
 
-## How to Run Locally
+### How to Run Locally
 
 1. Install Java 21 and Maven.
 2. Start MySQL and Kafka locally.
