@@ -71,7 +71,7 @@ services:
   # ============== AUTH SERVICE ==============
 
   auth-service:
-    build: ./auth-service
+    build: ./Auth-service
 
     container_name: auth-service-container
 
