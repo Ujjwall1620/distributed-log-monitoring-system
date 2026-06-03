@@ -1,30 +1,16 @@
-version: '3.8'
-
 services:
-
-  # ============== ZOOKEEPER ==============
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
-
     container_name: zookeeper-container
-
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
     ports:
       - "2181:2181"
-
     networks:
-      - kafka-network
-
-
-  # ================== KAFKA ==================
+      - networkName
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
-
     container_name: kafka-container
 
     depends_on:
@@ -39,6 +25,7 @@ services:
 
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
@@ -46,11 +33,8 @@ services:
       - kafka-network
 
 
-  # ================== MYSQL ==================
-
   mysql:
     image: mysql:8
-
     container_name: mysql-container
 
     environment:
@@ -59,96 +43,16 @@ services:
 
     ports:
       - "3307:3306"
-
+    
+    networks:
+      - networkName
     volumes:
-      - mysql_data:/var/lib/mysql
-
-    networks:
-      - kafka-network
+      - mysql-data:/var/lib/mysql
 
 
-  # ============== AUTH SERVICE ==============
+  networks: 
+    kafka-network:
+    
 
-  auth-service:
-    build: ./Auth-Service
-
-    container_name: auth-service-container
-
-    depends_on:
-      - mysql
-      - kafka
-
-    ports:
-      - "8081:8081"
-
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/distributed_log_monitoring
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-
-    networks:
-      - kafka-network
-
-
-  # ============== PAYMENT SERVICE ==============
-
-  payment-service:
-    build: ./payment-service
-
-    container_name: payment-service-container
-
-    depends_on:
-      - mysql
-      - kafka
-
-    ports:
-      - "8082:8082"
-
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/distributed_log_monitoring
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-
-    networks:
-      - kafka-network
-
-
-  # ============== LOG PROCESSING SERVICE ==============
-
-  log-processing-service:
-    build: ./log-processing-service
-
-    container_name: log-processing-service-container
-
-    depends_on:
-      - mysql
-      - kafka
-
-    ports:
-      - "8083:8083"
-
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/distributed_log_monitoring
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-
-    networks:
-      - kafka-network
-
-
-# ================== VOLUMES ==================
-
-volumes:
-  mysql_data:
-
-
-# ================== NETWORKS ==================
-
-networks:
-  kafka-network:
+  volumes:
+    mysql-data:  

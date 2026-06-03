@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 public class LogProducer {
     private final KafkaTemplate<String, LogMessage> kafkaTemplate;
     public void sendlog(LogMessage logMessage){
+        System.out.println("sending the logs to consumer"+ logMessage);
         kafkaTemplate.send("log-topic",logMessage);
     }
 }

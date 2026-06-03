@@ -1,7 +1,7 @@
 package com.example.log_processing_service.Kafka;
 
+import com.example.log_processing_service.DTO.LogMessage;
 import com.example.log_processing_service.Service.LogService;
-import com.example.payment_service.DTO.LogMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;

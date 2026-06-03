@@ -1,14 +1,18 @@
 package com.example.payment_service.security;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 
 @Component
 public class JwtUtil {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtUtil.class);
 
     private static final String SECRET =
             "mysecretkeymysecretkeymysecretkey";
@@ -18,7 +22,7 @@ public class JwtUtil {
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET.getBytes())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -28,16 +32,15 @@ public class JwtUtil {
     public boolean validateToken(String token) {
 
         try {
-
             Jwts.parserBuilder()
-                    .setSigningKey(SECRET.getBytes())
+                    .setSigningKey(key)
                     .build()
-                    .parseClaimsJwt(token);
+                    .parseClaimsJws(token);
 
             return true;
 
         } catch (Exception e) {
-
+            logger.warn("JWT validation failed: {}", e.getMessage());
             return false;
         }
     }
