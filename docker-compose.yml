@@ -1,24 +1,24 @@
+version: "3.8"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper-container
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
     networks:
-      - networkName
+      - kafka-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka-container
-
     depends_on:
       - zookeeper
-
     ports:
       - "9092:9092"
-
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -28,31 +28,25 @@ services:
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
     networks:
       - kafka-network
-
 
   mysql:
     image: mysql:8
     container_name: mysql-container
-
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: distributed_log_monitoring
-
     ports:
       - "3307:3306"
-    
-    networks:
-      - networkName
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - kafka-network
 
+networks:
+  kafka-network:
+    driver: bridge
 
-  networks: 
-    kafka-network:
-    
-
-  volumes:
-    mysql-data:  
+volumes:
+  mysql-data:
