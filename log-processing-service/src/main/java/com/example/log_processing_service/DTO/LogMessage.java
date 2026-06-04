@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class LogMessage {
 
-    private String serviceName;
+    private String service;
 
     private String level;
 

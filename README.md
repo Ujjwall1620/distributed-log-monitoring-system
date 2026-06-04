@@ -1,113 +1,74 @@
-# Distributed Log Monitoring Platform
+﻿# Distributed Log Monitoring Platform
 
-[![Maven Central](https://img.shields.io/badge/build-Maven-brightgreen)](https://maven.apache.org/)
-[![Java 21](https://img.shields.io/badge/java-21-blue)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
-[![Spring Boot](https://img.shields.io/badge/spring%20boot-3.5.0-brightgreen)](https://spring.io/projects/spring-boot)
-[![Kafka](https://img.shields.io/badge/kafka-enabled-orange)](https://kafka.apache.org/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
+A Docker-ready microservices system for authentication, payment processing, and centralized log ingestion.
 
-## Overview
+This repository contains three Spring Boot services that collaborate through Apache Kafka and MySQL:
 
-The `distributed-log-monitoring-platform` is a microservices-based system for authentication, payment processing, and centralized log aggregation. It demonstrates how Spring Boot services can use MySQL and Apache Kafka to build a scalable, observable platform.
+- `Auth-Service` — handles user registration, login, and audit log publishing.
+- `payment-service` — accepts payment requests, stores transactions, and emits Kafka log events.
+- `log-processing-service` — consumes Kafka log messages and persists them to MySQL for centralized monitoring.
 
-This repository includes three primary microservices:
-- `Auth-Service` — handles user registration, login, JWT authentication, and Kafka log publishing.
-- `Payment-Service` — processes payment requests, stores transactions, and publishes audit logs.
-- `Log-Processing-Service` — consumes Kafka log events and persists them to MySQL for centralized monitoring.
-
-## Features
-
-- Distributed microservices architecture
-- JWT-based authentication and authorization
-- Kafka-based event-driven logging
-- MySQL persistence for user, payment, and log data
-- Docker and Docker Compose support
-- Spring Boot, Spring Security, Spring Data JPA, Spring Kafka
-- Centralized log processing and storage
-
-## Tech Stack
+## Key Technologies
 
 - Java 21
 - Spring Boot 3.5
-- Spring Security
-- Spring Kafka
 - Spring Data JPA
+- Spring Kafka
 - MySQL
 - Docker
 - Docker Compose
 - Maven
-- Lombok
 
 ## Architecture
 
-The platform is organized into three collaborating services:
+The platform is composed of independent services connected by a shared Kafka messaging layer and a shared MySQL database.
 
-- `auth-service`: authenticates users, issues JWT tokens, and publishes authentication logs to Kafka.
-- `payment-service`: accepts payment requests, records transactions in MySQL, and publishes payment logs to Kafka.
-- `log-processing-service`: consumes logs from Kafka, transforms them, and stores them in a dedicated logs database table.
+- `Auth-Service` publishes authentication audit logs to Kafka
+- `payment-service` publishes payment audit logs to Kafka
+- `log-processing-service` consumes `log-topic` and stores processed log records
+- MySQL stores application data and processed logs
 
-Kafka is the central messaging backbone. Services publish log events to the `log-topic` topic, and `log-processing-service` consumes and persists them.
+## Services
 
-## Service Summary
+| Service | HTTP Port | Purpose |
+| --- | --- | --- |
+| `Auth-Service` | `8081` | User authentication and Kafka audit logging |
+| `payment-service` | `8082` | Payment processing and Kafka audit logging |
+| `log-processing-service` | `8083` | Kafka log consumer and persistent log storage |
 
-| Service | Function | Port | Notes |
-| --- | --- | --- | --- |
-| `Auth-Service` | User registration, login, JWT auth, Kafka log producer | `8081` | Uses Spring Security and JWT tokens |
-| `Payment-Service` | Payment processing, MySQL persistence, Kafka log producer | `8082` | Exposes `/payment/pay` endpoint |
-| `Log-Processing-Service` | Kafka consumer, log persistence, centralized log storage | `8083` | Consumes `log-topic` and writes to MySQL |
+## Docker Compose
 
-## Kafka Workflow
+The root `docker-compose.yml` file starts:
 
-- Producers: `Auth-Service` and `Payment-Service` publish structured log events to Kafka.
-- Topic: `log-topic`
-- Consumer: `Log-Processing-Service` listens on `log-topic` and persists logs.
-- This design supports audit logging, observability, and cross-service monitoring.
+- `zookeeper`
+- `kafka`
+- `mysql`
+- `auth-service`
+- `payment-service`
+- `log-processing-service`
 
-## Database Configuration
-
-All services connect to a shared MySQL database named `distributed_log_monitoring`.
-
-- MySQL exposed on host port `3307`
-- Database name: `distributed_log_monitoring`
-- Default credentials in compose: `root` / `root`
-
-Each service uses Spring Data JPA with `spring.jpa.hibernate.ddl-auto=update` for schema generation during development.
-
-## Docker Compose Setup
-
-The root `docker-compose.yml` orchestrates Zookeeper, Kafka, MySQL, and all microservices.
-
-### Services in compose
-
-- `zookeeper`: Kafka coordination service
-- `kafka`: message broker
-- `mysql`: persistent relational storage
-- `auth-service`: authentication service
-- `payment-service`: payment service
-- `log-processing-service`: centralized log consumer
-
-### Run with Docker Compose
+### Start the platform
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-### Stop and remove containers
+### Stop and cleanup
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
-## Running Locally
+## Local development
 
 ### Prerequisites
 
 - Java 21
 - Maven
-- Docker (optional for containers)
-- Kafka and MySQL if not using Docker
+- Docker
+- Docker Compose
 
-### Run services individually
+### Run individual services
 
 ```bash
 cd Auth-Service
@@ -124,62 +85,50 @@ cd log-processing-service
 ./mvnw clean spring-boot:run
 ```
 
-### Run with root Docker Compose
+### Run the full stack with Docker Compose
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-This starts the full platform with the following endpoints:
-- `http://localhost:8081` for `auth-service`
-- `http://localhost:8082` for `payment-service`
-- `http://localhost:8083` for `log-processing-service`
+## Service endpoints
 
-## Example Service Requests
+### Auth-Service
 
-### Auth-Service register/login
+- Register: `POST http://localhost:8081/auth/register`
+- Login: `POST http://localhost:8081/auth/login`
 
-```bash
-curl -X POST http://localhost:8081/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"jane.doe","password":"SecureP@ss123","email":"jane.doe@example.com"}'
-```
+### Payment-Service
 
-```bash
-curl -X POST http://localhost:8081/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"jane.doe","password":"SecureP@ss123"}'
-```
+- Process payment: `POST http://localhost:8082/payment/pay`
 
-### Payment-Service request
+### Log-Processing-Service
 
-```bash
-curl -X POST http://localhost:8082/payment/pay \
-  -H "Content-Type: application/json" \
-  -d '{"OrderId":123,"amount":149.99,"paymentMethod":"CREDIT_CARD"}'
-```
+- Read logs: `GET http://localhost:8083/logs`
+- Optional query parameters: `service`, `level`, `message`, `startTime`, `EndTime`
 
-### Consumed log payload
+## Kafka topics
 
-```json
-{
-  "serviceName": "PAYMENT-SERVICE",
-  "level": "INFO",
-  "message": "Payment Successful"
-}
-```
+- `log-topic` — produced by `Auth-Service` and `payment-service`
+- `processed-data` — created by `log-processing-service`
 
-## Root Dockerfile Notes
+## Database
 
-Each service contains its own `dockerfile`. The root compose file builds each service from its local directory.
+- MySQL database: `distributed_log_monitoring`
+- Host port: `3307`
+- Container port: `3306`
+- Default credentials: `root` / `root`
 
-- `Auth-Service/dockerfile`
-- `payment-service/dockerfile`
-- `log-processing-service/dockerfile`
+## Working with Docker Compose
 
-> Ensure the service Dockerfiles reference the correct built JAR path before building images.
+Inside Compose, services connect to each other by container name:
 
-## Folder Structure
+- Kafka: `kafka:9092`
+- MySQL: `mysql:3306`
+
+The services also use these environment variables inside the Compose stack.
+
+## Folder structure
 
 ```text
 distributed-log-monitoring-platform/
@@ -190,15 +139,9 @@ distributed-log-monitoring-platform/
 └── README.md
 ```
 
-## Future Improvements
+## Notes
 
-- Add API documentation with OpenAPI / Swagger
-- Implement distributed tracing with OpenTelemetry
-- Add service-to-service authentication and authorization
-- Introduce retry and dead-letter queue handling for Kafka
-- Add monitoring dashboards and alerting
-- Harden production-grade security for Kafka and MySQL
-
-## Notes for Recruiters
-
-This repository demonstrates a practical distributed system built with Spring Boot, Kafka, and MySQL. It showcases event-driven architecture, centralized logging, secure authentication, transaction processing, and containerized deployment.
+- Each service has its own Maven project and Dockerfile.
+- `Auth-Service` and `payment-service` publish to the same Kafka topic for centralized log processing.
+- `log-processing-service` provides a queryable log endpoint for stored audit records.
+- For production, replace credentials and secrets with safe configuration management.
