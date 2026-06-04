@@ -3,6 +3,18 @@ pipeline {
 
     stages {
 
+        stage('Debug Java') {
+    steps {
+        sh '''
+            whoami
+            java -version
+            javac -version
+            echo $JAVA_HOME
+            pwd
+        '''
+    }
+}
+
         stage('Deploy') {
             steps {
                 sh 'docker compose down || true'
