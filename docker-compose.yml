@@ -15,18 +15,35 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka-container
+
     depends_on:
       - zookeeper
+
     ports:
-      - "9092:9092"
+      - "9092:9092"      # Docker containers
+      - "29092:29092"    # IntelliJ / localhost
+
     environment:
       KAFKA_BROKER_ID: 1
+
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+
+      # Kafka listen both port
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+
+      # Containers gets kafka:9092
+      # Local machine gets localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+
+      # To communicate between kafka container
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
     networks:
       - app-network
 
@@ -109,4 +126,4 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:
+  mysql-data:git
