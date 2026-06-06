@@ -126,4 +126,4 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:git
+  mysql-data:
